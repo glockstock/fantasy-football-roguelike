@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(135deg, #013220 0%, #2d5016 100%);
+  min-height: 100vh;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+.card {
+  @apply bg-white rounded-lg shadow-lg p-4 border-2 border-gray-200 hover:border-blue-500 transition-colors;
+}
+
+.card-player {
+  @apply bg-gradient-to-br from-blue-50 to-blue-100 border-blue-300;
+}
+
+.card-play {
+  @apply bg-gradient-to-br from-green-50 to-green-100 border-green-300;
+}
+
+.card-modifier {
+  @apply bg-gradient-to-br from-purple-50 to-purple-100 border-purple-300;
+}
+
+.field {
+  background: linear-gradient(90deg, 
+    #2d5016 0%, 
+    #2d5016 10%, 
+    #ffffff 10%, 
+    #ffffff 12%, 
+    #2d5016 12%, 
+    #2d5016 20%, 
+    #ffffff 20%, 
+    #ffffff 22%, 
+    #2d5016 22%, 
+    #2d5016 30%, 
+    #ffffff 30%, 
+    #ffffff 32%, 
+    #2d5016 32%, 
+    #2d5016 40%, 
+    #ffffff 40%, 
+    #ffffff 42%, 
+    #2d5016 42%, 
+    #2d5016 50%, 
+    #ffffff 50%, 
+    #ffffff 52%, 
+    #2d5016 52%, 
+    #2d5016 60%, 
+    #ffffff 60%, 
+    #ffffff 62%, 
+    #2d5016 62%, 
+    #2d5016 70%, 
+    #ffffff 70%, 
+    #ffffff 72%, 
+    #2d5016 72%, 
+    #2d5016 80%, 
+    #ffffff 80%, 
+    #ffffff 82%, 
+    #2d5016 82%, 
+    #2d5016 90%, 
+    #ffffff 90%, 
+    #ffffff 92%, 
+    #2d5016 92%, 
+    #2d5016 100%
+  );
+}
