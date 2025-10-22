@@ -63,6 +63,9 @@ def init_db():
             current_run INTEGER DEFAULT 1,
             deck TEXT NOT NULL,  -- JSON string
             score INTEGER DEFAULT 0,
+            career_level TEXT DEFAULT 'high_school',
+            career_progress TEXT DEFAULT '{"current_level": "high_school", "total_score": 0, "championships_won": 0, "super_bowls_won": 0, "hall_of_fame_points": 0}',
+            deck_type TEXT DEFAULT 'balanced_offense',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -126,16 +129,17 @@ def start_game():
     """Start a new game session"""
     data = request.get_json()
     player_name = data.get('player_name', 'Player')
+    deck_type = data.get('deck_type', 'balanced_offense')
     
-    # Create initial deck with basic cards
-    initial_deck = get_initial_deck()
+    # Get deck based on selected type
+    initial_deck = get_deck_by_type(deck_type)
     
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
     cursor.execute('''
-        INSERT INTO game_sessions (player_name, deck)
-        VALUES (?, ?)
-    ''', (player_name, json.dumps(initial_deck)))
+        INSERT INTO game_sessions (player_name, deck, deck_type)
+        VALUES (?, ?, ?)
+    ''', (player_name, json.dumps(initial_deck), deck_type))
     
     session_id = cursor.lastrowid
     conn.commit()
@@ -146,7 +150,21 @@ def start_game():
         'deck': initial_deck,
         'season': 1,
         'run': 1,
-        'score': 0
+        'score': 0,
+        'career_level': {
+            'level': 'high_school',
+            'name': 'High School Coach',
+            'description': 'Starting your coaching journey',
+            'required_score': 0,
+            'next_level': 'college'
+        },
+        'career_progress': {
+            'current_level': 'high_school',
+            'total_score': 0,
+            'championships_won': 0,
+            'super_bowls_won': 0,
+            'hall_of_fame_points': 0
+        }
     })
 
 @app.route('/api/game/<int:session_id>/deck', methods=['GET'])
@@ -247,13 +265,125 @@ def get_modifiers():
     conn.close()
     return jsonify(modifiers)
 
-def get_initial_deck():
-    """Get starting deck for new players"""
-    return {
-        'players': [1, 2],  # IDs of starting players
-        'plays': [1, 2, 3],  # IDs of starting plays
-        'modifiers': [1]  # IDs of starting modifiers
+@app.route('/api/deck-types', methods=['GET'])
+def get_deck_types():
+    """Get all available deck types"""
+    return jsonify([
+        {
+            'id': 'balanced_offense',
+            'name': 'Balanced Offense',
+            'description': 'A well-rounded deck focusing on both passing and rushing plays. Perfect for beginners.',
+            'difficulty': 'beginner',
+            'cards': {
+                'players': [1, 2],  # Tom Brady, Aaron Rodgers
+                'plays': [1, 2, 3],  # Hail Mary, Screen Pass, Draw Play
+                'modifiers': [1]  # Red Zone Boost
+            }
+        },
+        {
+            'id': 'air_raid',
+            'name': 'Air Raid',
+            'description': 'High-flying passing attack with explosive plays. High risk, high reward.',
+            'difficulty': 'beginner',
+            'cards': {
+                'players': [1, 4],  # Tom Brady, Cooper Kupp
+                'plays': [1, 5],  # Hail Mary, Play Action
+                'modifiers': [2]  # Weather Advantage
+            }
+        },
+        {
+            'id': 'ground_and_pound',
+            'name': 'Ground & Pound',
+            'description': 'Power running game with strong defense. Consistent and reliable.',
+            'difficulty': 'beginner',
+            'cards': {
+                'players': [6, 7],  # Derrick Henry, Travis Kelce
+                'plays': [2, 3],  # Screen Pass, Draw Play
+                'modifiers': [3]  # Home Field
+            }
+        },
+        {
+            'id': 'trick_plays',
+            'name': 'Trick Plays',
+            'description': 'Unconventional plays and misdirection. Surprise your opponents!',
+            'difficulty': 'intermediate',
+            'cards': {
+                'players': [2, 5],  # Aaron Rodgers, Davante Adams
+                'plays': [4, 5],  # Flea Flicker, Wildcat
+                'modifiers': [4]  # Clutch Factor
+            },
+            'unlock_requirement': {
+                'career_level': 'college'
+            }
+        }
+    ])
+
+@app.route('/api/career-progress', methods=['GET'])
+def get_career_progress():
+    """Get career progression information"""
+    return jsonify({
+        'levels': [
+            {
+                'level': 'high_school',
+                'name': 'High School Coach',
+                'description': 'Starting your coaching journey',
+                'required_score': 0,
+                'next_level': 'college'
+            },
+            {
+                'level': 'college',
+                'name': 'College Coach',
+                'description': 'Leading a college program',
+                'required_score': 1000,
+                'next_level': 'nfl'
+            },
+            {
+                'level': 'nfl',
+                'name': 'NFL Coach',
+                'description': 'Coaching in the National Football League',
+                'required_score': 5000,
+                'next_level': 'hall_of_fame'
+            },
+            {
+                'level': 'hall_of_fame',
+                'name': 'Hall of Fame Coach',
+                'description': 'Legendary coaching career',
+                'required_score': 20000,
+                'next_level': None
+            }
+        ]
+    })
+
+def get_deck_by_type(deck_type: str):
+    """Get deck configuration based on deck type"""
+    deck_configs = {
+        'balanced_offense': {
+            'players': [1, 2],  # Tom Brady, Aaron Rodgers
+            'plays': [1, 2, 3],  # Hail Mary, Screen Pass, Draw Play
+            'modifiers': [1]  # Red Zone Boost
+        },
+        'air_raid': {
+            'players': [1, 4],  # Tom Brady, Cooper Kupp
+            'plays': [1, 5],  # Hail Mary, Play Action
+            'modifiers': [2]  # Weather Advantage
+        },
+        'ground_and_pound': {
+            'players': [6, 7],  # Derrick Henry, Travis Kelce
+            'plays': [2, 3],  # Screen Pass, Draw Play
+            'modifiers': [3]  # Home Field
+        },
+        'trick_plays': {
+            'players': [2, 5],  # Aaron Rodgers, Davante Adams
+            'plays': [4, 5],  # Flea Flicker, Wildcat
+            'modifiers': [4]  # Clutch Factor
+        }
     }
+    
+    return deck_configs.get(deck_type, deck_configs['balanced_offense'])
+
+def get_initial_deck():
+    """Get starting deck for new players (legacy function)"""
+    return get_deck_by_type('balanced_offense')
 
 def calculate_run_score(cards_played):
     """Calculate score for a run based on cards played"""

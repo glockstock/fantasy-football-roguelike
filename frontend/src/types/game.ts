@@ -52,6 +52,46 @@ export interface GameState {
   score: number;
   hand?: Card[];
   field?: Card[];
+  career_level: CareerLevel;
+  career_progress: CareerProgress;
+}
+
+export interface CareerLevel {
+  level: 'high_school' | 'college' | 'nfl' | 'hall_of_fame';
+  name: string;
+  description: string;
+  required_score: number;
+  next_level?: string;
+}
+
+export interface CareerProgress {
+  current_level: string;
+  total_score: number;
+  championships_won: number;
+  super_bowls_won: number;
+  hall_of_fame_points: number;
+}
+
+export interface DeckType {
+  id: string;
+  name: string;
+  description: string;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  cards: {
+    players: number[];
+    plays: number[];
+    modifiers: number[];
+  };
+  unlock_requirement?: {
+    career_level?: string;
+    score_threshold?: number;
+  };
+}
+
+export interface AppState {
+  currentScreen: 'splash' | 'deck_selection' | 'game';
+  selectedDeckType?: string;
+  playerName?: string;
 }
 
 export interface RunResult {
