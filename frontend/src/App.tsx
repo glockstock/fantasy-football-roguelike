@@ -117,7 +117,7 @@ function App() {
               Fantasy Football Roguelike
             </h1>
             <p className="text-gray-300">
-              Coach {appState.playerName} - {gameState.career_level.name}
+              Coach {appState.playerName} - {gameState.career_level.name} | Season {gameState.season}
             </p>
           </header>
 

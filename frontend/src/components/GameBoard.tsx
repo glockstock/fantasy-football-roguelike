@@ -14,13 +14,13 @@ const GameBoard: React.FC = () => {
     const newField = [...field, card];
     setField(newField);
 
-    // Check if this completes a run (simplified logic)
+    // Check if this completes a drive (simplified logic)
     if (card.type === 'play' && (card.data as Play).name.toLowerCase().includes('touchdown')) {
-      await playRun(newField);
+      await executeDrive(newField);
     }
   };
 
-  const playRun = async (cards: Card[]) => {
+  const executeDrive = async (cards: Card[]) => {
     if (!gameState) return;
 
     try {
@@ -39,20 +39,20 @@ const GameBoard: React.FC = () => {
         setGameState({
           ...gameState,
           score: gameState.score + result.run_score,
-          run: gameState.run + 1,
+          run: gameState.run + 1, // This represents drives/games in the season
         });
         
         // Clear field
         setField([]);
         
         // Show success message
-        alert(`Run completed! +${result.run_score} points`);
+        alert(`Drive completed! +${result.run_score} points`);
       } else {
-        alert('Invalid run! Must end with a scoring play.');
+        alert('Invalid drive! Must end with a scoring play.');
         setField([]);
       }
     } catch (error) {
-      console.error('Failed to play run:', error);
+      console.error('Failed to execute drive:', error);
     }
   };
 
@@ -72,11 +72,11 @@ const GameBoard: React.FC = () => {
             Clear Field
           </button>
           <button
-            onClick={() => playRun(field)}
+            onClick={() => executeDrive(field)}
             disabled={field.length === 0}
             className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
           >
-            Play Run
+            Execute Drive
           </button>
         </div>
       </div>

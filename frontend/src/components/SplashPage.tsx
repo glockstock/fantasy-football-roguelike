@@ -109,13 +109,13 @@ const SplashPage: React.FC<SplashPageProps> = ({ onStartNewRun, careerProgress }
           <div className="grid md:grid-cols-3 gap-6 text-gray-300">
             <div className="text-center">
               <div className="text-3xl mb-2">🎯</div>
-              <h4 className="font-semibold text-white mb-2">Build Your Deck</h4>
-              <p className="text-sm">Choose from different deck archetypes and collect powerful cards</p>
+              <h4 className="font-semibold text-white mb-2">Recruit Your Team</h4>
+              <p className="text-sm">Choose your coaching philosophy and recruit players that fit your system</p>
             </div>
             <div className="text-center">
               <div className="text-3xl mb-2">🏃</div>
-              <h4 className="font-semibold text-white mb-2">Make Your Runs</h4>
-              <p className="text-sm">Play sequences of cards to score touchdowns and advance</p>
+              <h4 className="font-semibold text-white mb-2">Play Out the Season</h4>
+              <p className="text-sm">Call plays and execute drives to score touchdowns and win games</p>
             </div>
             <div className="text-center">
               <div className="text-3xl mb-2">🏆</div>

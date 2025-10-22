@@ -35,7 +35,7 @@ const DeckSelection: React.FC<DeckSelectionProps> = ({ onDeckSelected, onBack, p
     {
       id: 'balanced_offense',
       name: 'Balanced Offense',
-      description: 'A well-rounded deck focusing on both passing and rushing plays. Perfect for beginners.',
+      description: 'A well-rounded coaching philosophy focusing on both passing and rushing plays. Perfect for new coaches.',
       difficulty: 'beginner',
       cards: {
         players: [1, 2], // Tom Brady, Aaron Rodgers
@@ -46,7 +46,7 @@ const DeckSelection: React.FC<DeckSelectionProps> = ({ onDeckSelected, onBack, p
     {
       id: 'air_raid',
       name: 'Air Raid',
-      description: 'High-flying passing attack with explosive plays. High risk, high reward.',
+      description: 'High-flying passing attack with explosive plays. High risk, high reward coaching style.',
       difficulty: 'beginner',
       cards: {
         players: [1, 4], // Tom Brady, Cooper Kupp
@@ -57,7 +57,7 @@ const DeckSelection: React.FC<DeckSelectionProps> = ({ onDeckSelected, onBack, p
     {
       id: 'ground_and_pound',
       name: 'Ground & Pound',
-      description: 'Power running game with strong defense. Consistent and reliable.',
+      description: 'Power running game with strong defense. Consistent and reliable coaching approach.',
       difficulty: 'beginner',
       cards: {
         players: [6, 7], // Derrick Henry, Travis Kelce
@@ -68,7 +68,7 @@ const DeckSelection: React.FC<DeckSelectionProps> = ({ onDeckSelected, onBack, p
     {
       id: 'trick_plays',
       name: 'Trick Plays',
-      description: 'Unconventional plays and misdirection. Surprise your opponents!',
+      description: 'Unconventional plays and misdirection. Surprise your opponents with creative coaching!',
       difficulty: 'intermediate',
       cards: {
         players: [2, 5], // Aaron Rodgers, Davante Adams
@@ -124,10 +124,10 @@ const DeckSelection: React.FC<DeckSelectionProps> = ({ onDeckSelected, onBack, p
           </button>
           
           <h1 className="text-4xl font-bold text-white mb-2">
-            Choose Your Deck
+            {careerLevel === 'nfl' ? 'Draft Your Team' : 'Recruit Your Team'}
           </h1>
           <p className="text-gray-300">
-            Welcome, Coach {playerName}! Select your strategy for this run.
+            Welcome, Coach {playerName}! {careerLevel === 'nfl' ? 'Draft your roster' : 'Recruit your players'} for this season.
           </p>
         </div>
 
@@ -161,6 +161,17 @@ const DeckSelection: React.FC<DeckSelectionProps> = ({ onDeckSelected, onBack, p
                 <p className="text-gray-300 mb-4 text-sm">
                   {deck.description}
                 </p>
+                
+                {/* Coaching Philosophy */}
+                <div className="mb-4">
+                  <h5 className="text-white font-semibold text-sm mb-2">Coaching Philosophy:</h5>
+                  <p className="text-gray-400 text-xs">
+                    {deck.id === 'balanced_offense' && 'Balanced approach with both passing and running'}
+                    {deck.id === 'air_raid' && 'High-flying passing attack with explosive plays'}
+                    {deck.id === 'ground_and_pound' && 'Power running game with strong defense'}
+                    {deck.id === 'trick_plays' && 'Unconventional plays and misdirection'}
+                  </p>
+                </div>
 
                 {/* Lock Status */}
                 {!isUnlocked && (
@@ -172,7 +183,7 @@ const DeckSelection: React.FC<DeckSelectionProps> = ({ onDeckSelected, onBack, p
                   </div>
                 )}
 
-                {/* Card Preview */}
+                {/* Roster Preview */}
                 {isUnlocked && (
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
@@ -180,11 +191,11 @@ const DeckSelection: React.FC<DeckSelectionProps> = ({ onDeckSelected, onBack, p
                       <span className="text-white">{deck.cards.players.length}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Plays:</span>
+                      <span className="text-gray-400">Playbook:</span>
                       <span className="text-white">{deck.cards.plays.length}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Modifiers:</span>
+                      <span className="text-gray-400">Coaching:</span>
                       <span className="text-white">{deck.cards.modifiers.length}</span>
                     </div>
                   </div>
@@ -208,12 +219,12 @@ const DeckSelection: React.FC<DeckSelectionProps> = ({ onDeckSelected, onBack, p
             disabled={!selectedDeck}
             className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold py-4 px-8 rounded-lg text-xl transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100"
           >
-            🏈 Start Game
+            🏈 Start Season
           </button>
           
           {!selectedDeck && (
             <p className="text-gray-400 text-sm mt-2">
-              Select a deck to begin your run
+              Select a coaching philosophy to begin your season
             </p>
           )}
         </div>

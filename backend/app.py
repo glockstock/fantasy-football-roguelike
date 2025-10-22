@@ -272,7 +272,7 @@ def get_deck_types():
         {
             'id': 'balanced_offense',
             'name': 'Balanced Offense',
-            'description': 'A well-rounded deck focusing on both passing and rushing plays. Perfect for beginners.',
+            'description': 'A well-rounded coaching philosophy focusing on both passing and rushing plays. Perfect for new coaches.',
             'difficulty': 'beginner',
             'cards': {
                 'players': [1, 2],  # Tom Brady, Aaron Rodgers
@@ -283,7 +283,7 @@ def get_deck_types():
         {
             'id': 'air_raid',
             'name': 'Air Raid',
-            'description': 'High-flying passing attack with explosive plays. High risk, high reward.',
+            'description': 'High-flying passing attack with explosive plays. High risk, high reward coaching style.',
             'difficulty': 'beginner',
             'cards': {
                 'players': [1, 4],  # Tom Brady, Cooper Kupp
@@ -294,7 +294,7 @@ def get_deck_types():
         {
             'id': 'ground_and_pound',
             'name': 'Ground & Pound',
-            'description': 'Power running game with strong defense. Consistent and reliable.',
+            'description': 'Power running game with strong defense. Consistent and reliable coaching approach.',
             'difficulty': 'beginner',
             'cards': {
                 'players': [6, 7],  # Derrick Henry, Travis Kelce
@@ -305,7 +305,7 @@ def get_deck_types():
         {
             'id': 'trick_plays',
             'name': 'Trick Plays',
-            'description': 'Unconventional plays and misdirection. Surprise your opponents!',
+            'description': 'Unconventional plays and misdirection. Surprise your opponents with creative coaching!',
             'difficulty': 'intermediate',
             'cards': {
                 'players': [2, 5],  # Aaron Rodgers, Davante Adams
