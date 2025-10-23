@@ -60,11 +60,14 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             player_name TEXT NOT NULL,
             current_season INTEGER DEFAULT 1,
-            current_run INTEGER DEFAULT 1,
+            current_game INTEGER DEFAULT 1,
+            current_drive INTEGER DEFAULT 1,
             deck TEXT NOT NULL,  -- JSON string
             score INTEGER DEFAULT 0,
             career_level TEXT DEFAULT 'high_school',
             career_progress TEXT DEFAULT '{"current_level": "high_school", "total_score": 0, "championships_won": 0, "super_bowls_won": 0, "hall_of_fame_points": 0}',
+            game_progress TEXT DEFAULT '{"current_game": 1, "current_drive": 1, "drives_completed": 0, "games_won": 0, "total_drives_in_game": 4, "total_games_in_season": 10}',
+            season_progress TEXT DEFAULT '{"current_season": 1, "games_won": 0, "seasons_won": 0, "total_games_in_season": 10, "total_seasons": 10}',
             deck_type TEXT DEFAULT 'balanced_offense',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
@@ -149,7 +152,8 @@ def start_game():
         'session_id': session_id,
         'deck': initial_deck,
         'season': 1,
-        'run': 1,
+        'game': 1,
+        'drive': 1,
         'score': 0,
         'career_level': {
             'level': 'high_school',
@@ -164,6 +168,21 @@ def start_game():
             'championships_won': 0,
             'super_bowls_won': 0,
             'hall_of_fame_points': 0
+        },
+        'game_progress': {
+            'current_game': 1,
+            'current_drive': 1,
+            'drives_completed': 0,
+            'games_won': 0,
+            'total_drives_in_game': 4,
+            'total_games_in_season': 10
+        },
+        'season_progress': {
+            'current_season': 1,
+            'games_won': 0,
+            'seasons_won': 0,
+            'total_games_in_season': 10,
+            'total_seasons': 10
         }
     })
 
@@ -181,30 +200,101 @@ def get_deck(session_id):
     
     return jsonify({'deck': json.loads(result[0])})
 
-@app.route('/api/game/<int:session_id>/play-run', methods=['POST'])
-def play_run(session_id):
-    """Play a run (sequence of cards)"""
+@app.route('/api/game/<int:session_id>/play-drive', methods=['POST'])
+def play_drive(session_id):
+    """Play a drive (sequence of cards)"""
     data = request.get_json()
     cards_played = data.get('cards', [])
     
-    # Calculate run score
-    run_score = calculate_run_score(cards_played)
+    # Calculate drive score and results
+    drive_result = calculate_drive_score(cards_played)
     
-    # Update session
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
+    
+    # Get current session state
+    cursor.execute('SELECT current_game, current_drive, game_progress, season_progress FROM game_sessions WHERE id = ?', (session_id,))
+    session_data = cursor.fetchone()
+    
+    if not session_data:
+        conn.close()
+        return jsonify({'error': 'Session not found'}), 404
+    
+    current_game, current_drive, game_progress_json, season_progress_json = session_data
+    game_progress = json.loads(game_progress_json)
+    season_progress = json.loads(season_progress_json)
+    
+    # Update drive progress
+    game_progress['drives_completed'] += 1
+    
+    # Check if drive was successful
+    if drive_result['drive_successful']:
+        # Move to next drive
+        if current_drive < game_progress['total_drives_in_game']:
+            # Next drive in same game
+            game_progress['current_drive'] = current_drive + 1
+            next_game = current_game
+            next_drive = current_drive + 1
+        else:
+            # Game completed! Move to next game
+            game_progress['games_won'] += 1
+            season_progress['games_won'] += 1
+            
+            if current_game < game_progress['total_games_in_season']:
+                # Next game in same season
+                game_progress['current_game'] = current_game + 1
+                game_progress['current_drive'] = 1
+                game_progress['drives_completed'] = 0
+                next_game = current_game + 1
+                next_drive = 1
+            else:
+                # Season completed! Check for championship
+                if season_progress['games_won'] == game_progress['total_games_in_season']:
+                    season_progress['seasons_won'] += 1
+                    # Start new season
+                    if season_progress['current_season'] < season_progress['total_seasons']:
+                        season_progress['current_season'] += 1
+                        season_progress['games_won'] = 0
+                        game_progress['current_game'] = 1
+                        game_progress['current_drive'] = 1
+                        game_progress['drives_completed'] = 0
+                        game_progress['games_won'] = 0
+                        next_game = 1
+                        next_drive = 1
+                    else:
+                        # All seasons completed - Championship won!
+                        next_game = current_game
+                        next_drive = current_drive
+                else:
+                    # Season failed
+                    next_game = current_game
+                    next_drive = current_drive
+    else:
+        # Drive failed - game over
+        next_game = current_game
+        next_drive = current_drive
+    
+    # Update session with new progress
     cursor.execute('''
         UPDATE game_sessions 
-        SET score = score + ?, current_run = current_run + 1
+        SET score = score + ?, 
+            current_game = ?, 
+            current_drive = ?,
+            game_progress = ?,
+            season_progress = ?
         WHERE id = ?
-    ''', (run_score, session_id))
+    ''', (drive_result['drive_score'], next_game, next_drive, 
+          json.dumps(game_progress), json.dumps(season_progress), session_id))
+    
     conn.commit()
     conn.close()
     
     return jsonify({
-        'run_score': run_score,
-        'cards_played': cards_played,
-        'valid_run': run_score > 0
+        'drive_result': drive_result,
+        'game_progress': game_progress,
+        'season_progress': season_progress,
+        'next_game': next_game,
+        'next_drive': next_drive
     })
 
 @app.route('/api/cards/players', methods=['GET'])
@@ -385,20 +475,54 @@ def get_initial_deck():
     """Get starting deck for new players (legacy function)"""
     return get_deck_by_type('balanced_offense')
 
-def calculate_run_score(cards_played):
-    """Calculate score for a run based on cards played"""
+def calculate_drive_score(cards_played):
+    """Calculate score and results for a drive based on cards played"""
     if not cards_played:
-        return 0
+        return {
+            'drive_score': 0,
+            'cards_played': [],
+            'drive_successful': False,
+            'yards_gained': 0,
+            'points_scored': 0
+        }
     
-    # Basic scoring logic - can be expanded
+    # Basic drive scoring logic
     base_score = len(cards_played) * 10
+    yards_gained = 0
+    points_scored = 0
+    drive_successful = False
     
-    # Check if run ends with scoring play
-    last_card = cards_played[-1]
-    if last_card.get('type') == 'play' and 'scoring' in last_card.get('name', '').lower():
-        base_score *= 2
+    # Calculate yards and points based on cards played
+    for card in cards_played:
+        if card.get('type') == 'play':
+            play_stats = card.get('data', {}).get('base_stats', {})
+            yards_gained += play_stats.get('yards', 0)
+            
+            # Check for scoring plays
+            play_name = card.get('data', {}).get('name', '').lower()
+            if any(scoring_term in play_name for scoring_term in ['touchdown', 'field goal', 'hail mary']):
+                if 'touchdown' in play_name:
+                    points_scored += 6
+                elif 'field goal' in play_name:
+                    points_scored += 3
+                elif 'hail mary' in play_name and yards_gained >= 40:
+                    points_scored += 6  # Long TD
     
-    return base_score
+    # Drive is successful if we gain at least 10 yards or score
+    drive_successful = yards_gained >= 10 or points_scored > 0
+    
+    # Bonus points for successful drives
+    if drive_successful:
+        base_score += yards_gained * 2
+        base_score += points_scored * 10
+    
+    return {
+        'drive_score': base_score,
+        'cards_played': cards_played,
+        'drive_successful': drive_successful,
+        'yards_gained': yards_gained,
+        'points_scored': points_scored
+    }
 
 if __name__ == '__main__':
     init_db()

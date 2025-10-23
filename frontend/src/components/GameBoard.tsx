@@ -24,7 +24,7 @@ const GameBoard: React.FC = () => {
     if (!gameState) return;
 
     try {
-      const response = await fetch(`/api/game/${gameState.session_id}/play-run`, {
+      const response = await fetch(`/api/game/${gameState.session_id}/play-drive`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -34,21 +34,36 @@ const GameBoard: React.FC = () => {
 
       const result = await response.json();
       
-      if (result.valid_run) {
-        // Update game state with new score
+      if (result.drive_result.drive_successful) {
+        // Update game state with new progress
         setGameState({
           ...gameState,
-          score: gameState.score + result.run_score,
-          run: gameState.run + 1, // This represents drives/games in the season
+          score: gameState.score + result.drive_result.drive_score,
+          game: result.next_game,
+          drive: result.next_drive,
+          game_progress: result.game_progress,
+          season_progress: result.season_progress,
         });
         
         // Clear field
         setField([]);
         
-        // Show success message
-        alert(`Drive completed! +${result.run_score} points`);
+        // Show success message with drive details
+        const driveResult = result.drive_result;
+        alert(`Drive completed! +${driveResult.drive_score} points\nYards: ${driveResult.yards_gained}\nPoints: ${driveResult.points_scored}`);
+        
+        // Check for game/season completion
+        if (result.game_progress.current_game > gameState.game_progress.current_game) {
+          alert(`Game ${gameState.game_progress.current_game} won! Moving to Game ${result.game_progress.current_game}`);
+        }
+        if (result.season_progress.current_season > gameState.season_progress.current_season) {
+          alert(`Season ${gameState.season_progress.current_season} won! Moving to Season ${result.season_progress.current_season}`);
+        }
+        if (result.season_progress.seasons_won > gameState.season_progress.seasons_won) {
+          alert(`🏆 CHAMPIONSHIP WON! You've completed all ${result.season_progress.total_seasons} seasons!`);
+        }
       } else {
-        alert('Invalid drive! Must end with a scoring play.');
+        alert('Drive failed! You need to gain at least 10 yards or score points.');
         setField([]);
       }
     } catch (error) {
@@ -85,7 +100,7 @@ const GameBoard: React.FC = () => {
       <div className="field h-32 rounded-lg mb-6 relative overflow-hidden">
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-white font-bold text-lg">
-            {field.length === 0 ? 'Drop cards here to build your run' : `${field.length} cards played`}
+            {field.length === 0 ? 'Drop cards here to build your drive' : `${field.length} cards played`}
           </div>
         </div>
       </div>
@@ -102,14 +117,15 @@ const GameBoard: React.FC = () => {
         ))}
       </div>
 
-      {/* Run Instructions */}
+      {/* Drive Instructions */}
       <div className="mt-6 p-4 bg-gray-100 rounded-lg">
         <h3 className="font-bold text-gray-800 mb-2">How to Play:</h3>
         <ul className="text-sm text-gray-600 space-y-1">
-          <li>• Drag cards from your hand to the field to build a run</li>
-          <li>• Runs must end with a scoring play (touchdown, field goal, etc.)</li>
-          <li>• Each run scores points based on the cards played</li>
-          <li>• Complete runs to advance through seasons</li>
+          <li>• Drag cards from your hand to the field to build a drive</li>
+          <li>• Drives must gain 10+ yards or score points to succeed</li>
+          <li>• Complete 4 successful drives to win each game</li>
+          <li>• Win 10 games to win each season</li>
+          <li>• Complete all 10 seasons to win the championship!</li>
         </ul>
       </div>
     </div>

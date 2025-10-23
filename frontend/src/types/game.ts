@@ -48,12 +48,32 @@ export interface GameState {
     modifiers: number[];
   };
   season: number;
-  run: number;
+  game: number;
+  drive: number;
   score: number;
   hand?: Card[];
   field?: Card[];
   career_level: CareerLevel;
   career_progress: CareerProgress;
+  game_progress: GameProgress;
+  season_progress: SeasonProgress;
+}
+
+export interface GameProgress {
+  current_game: number;
+  current_drive: number;
+  drives_completed: number;
+  games_won: number;
+  total_drives_in_game: number;
+  total_games_in_season: number;
+}
+
+export interface SeasonProgress {
+  current_season: number;
+  games_won: number;
+  seasons_won: number;
+  total_games_in_season: number;
+  total_seasons: number;
 }
 
 export interface CareerLevel {
@@ -94,8 +114,24 @@ export interface AppState {
   playerName?: string;
 }
 
-export interface RunResult {
-  run_score: number;
+export interface DriveResult {
+  drive_score: number;
   cards_played: Card[];
-  valid_run: boolean;
+  drive_successful: boolean;
+  yards_gained: number;
+  points_scored: number;
+}
+
+export interface GameResult {
+  game_won: boolean;
+  total_score: number;
+  drives_completed: number;
+  final_drive_result?: DriveResult;
+}
+
+export interface SeasonResult {
+  season_won: boolean;
+  games_won: number;
+  total_score: number;
+  championship_earned: boolean;
 }
