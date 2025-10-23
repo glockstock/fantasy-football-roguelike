@@ -102,7 +102,7 @@ function App() {
   }
 
   return (
-    <GameProvider value={{ gameState, setGameState }}>
+    <GameProvider gameState={gameState} setGameState={setGameState}>
       <div className="min-h-screen bg-gradient-to-br from-football-green to-field-green">
         <div className="container mx-auto px-4 py-8">
           <header className="text-center mb-8">

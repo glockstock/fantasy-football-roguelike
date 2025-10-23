@@ -4,7 +4,7 @@ import { Card, Player, Play, Modifier } from '../types/game';
 import CardComponent from './CardComponent';
 
 const Hand: React.FC = () => {
-  const { gameState, setGameState } = useGame();
+  const { gameState, setGameState, playCard } = useGame();
   const [hand, setHand] = useState<Card[]>([]);
   const [allCards, setAllCards] = useState<{
     players: Player[];
@@ -84,6 +84,12 @@ const Hand: React.FC = () => {
     setHand(prev => [...prev, randomCard]);
   };
 
+  const handleCardClick = (card: Card) => {
+    playCard(card);
+    // Remove the card from hand after playing
+    setHand(prev => prev.filter(c => c.id !== card.id || c.type !== card.type));
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
       <div className="flex justify-between items-center mb-4">
@@ -99,7 +105,7 @@ const Hand: React.FC = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
         {hand.map((card, index) => (
           <div key={`${card.id}-${index}`} className="cursor-pointer hover:scale-105 transition-transform">
-            <CardComponent card={card} />
+            <CardComponent card={card} onClick={() => handleCardClick(card)} />
           </div>
         ))}
       </div>

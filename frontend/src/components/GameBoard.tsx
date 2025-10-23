@@ -4,72 +4,7 @@ import { Card, Player, Play, Modifier } from '../types/game';
 import CardComponent from './CardComponent';
 
 const GameBoard: React.FC = () => {
-  const { gameState, setGameState } = useGame();
-  const [field, setField] = useState<Card[]>([]);
-  const [isPlayingRun, setIsPlayingRun] = useState(false);
-
-  const handleCardPlay = async (card: Card) => {
-    if (!gameState) return;
-
-    const newField = [...field, card];
-    setField(newField);
-
-    // Check if this completes a drive (simplified logic)
-    if (card.type === 'play' && (card.data as Play).name.toLowerCase().includes('touchdown')) {
-      await executeDrive(newField);
-    }
-  };
-
-  const executeDrive = async (cards: Card[]) => {
-    if (!gameState) return;
-
-    try {
-      const response = await fetch(`/api/game/${gameState.session_id}/play-drive`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ cards }),
-      });
-
-      const result = await response.json();
-      
-      if (result.drive_result.drive_successful) {
-        // Update game state with new progress
-        setGameState({
-          ...gameState,
-          score: gameState.score + result.drive_result.drive_score,
-          game: result.next_game,
-          drive: result.next_drive,
-          game_progress: result.game_progress,
-          season_progress: result.season_progress,
-        });
-        
-        // Clear field
-        setField([]);
-        
-        // Show success message with drive details
-        const driveResult = result.drive_result;
-        alert(`Drive completed! +${driveResult.drive_score} points\nYards: ${driveResult.yards_gained}\nPoints: ${driveResult.points_scored}`);
-        
-        // Check for game/season completion
-        if (result.game_progress.current_game > gameState.game_progress.current_game) {
-          alert(`Game ${gameState.game_progress.current_game} won! Moving to Game ${result.game_progress.current_game}`);
-        }
-        if (result.season_progress.current_season > gameState.season_progress.current_season) {
-          alert(`Season ${gameState.season_progress.current_season} won! Moving to Season ${result.season_progress.current_season}`);
-        }
-        if (result.season_progress.seasons_won > gameState.season_progress.seasons_won) {
-          alert(`🏆 CHAMPIONSHIP WON! You've completed all ${result.season_progress.total_seasons} seasons!`);
-        }
-      } else {
-        alert('Drive failed! You need to gain at least 10 yards or score points.');
-        setField([]);
-      }
-    } catch (error) {
-      console.error('Failed to execute drive:', error);
-    }
-  };
+  const { gameState, setGameState, field, setField, executeDrive } = useGame();
 
   const clearField = () => {
     setField([]);
@@ -87,7 +22,7 @@ const GameBoard: React.FC = () => {
             Clear Field
           </button>
           <button
-            onClick={() => executeDrive(field)}
+            onClick={() => executeDrive()}
             disabled={field.length === 0}
             className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
           >
