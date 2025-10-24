@@ -4,23 +4,24 @@ import { Card, Player, Play, Modifier } from '../types/game';
 import CardComponent from './CardComponent';
 
 const Hand: React.FC = () => {
-  const { gameState, setGameState, playCard } = useGame();
-  const [hand, setHand] = useState<Card[]>([]);
+  const { gameState, playCard, hand, drawCards, mulligan } = useGame();
   const [allCards, setAllCards] = useState<{
     players: Player[];
     plays: Play[];
     modifiers: Modifier[];
   }>({ players: [], plays: [], modifiers: [] });
+  const [playedCardAnimation, setPlayedCardAnimation] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAllCards();
   }, []);
 
   useEffect(() => {
-    if (gameState && allCards.players.length > 0) {
-      generateHand();
+    if (gameState && allCards.players.length > 0 && hand.length === 0) {
+      // Draw initial hand of 5 cards
+      drawCards(5);
     }
-  }, [gameState, allCards]);
+  }, [gameState, allCards, hand.length, drawCards]);
 
   const fetchAllCards = async () => {
     try {
@@ -40,79 +41,70 @@ const Hand: React.FC = () => {
     }
   };
 
-  const generateHand = () => {
-    if (!gameState || !allCards.players.length) return;
-
-    const handCards: Card[] = [];
-
-    // Add players from deck
-    gameState.deck.players.forEach(playerId => {
-      const player = allCards.players.find(p => p.id === playerId);
-      if (player) {
-        handCards.push({ id: player.id, type: 'player', data: player });
-      }
-    });
-
-    // Add plays from deck
-    gameState.deck.plays.forEach(playId => {
-      const play = allCards.plays.find(p => p.id === playId);
-      if (play) {
-        handCards.push({ id: play.id, type: 'play', data: play });
-      }
-    });
-
-    // Add modifiers from deck
-    gameState.deck.modifiers.forEach(modifierId => {
-      const modifier = allCards.modifiers.find(m => m.id === modifierId);
-      if (modifier) {
-        handCards.push({ id: modifier.id, type: 'modifier', data: modifier });
-      }
-    });
-
-    setHand(handCards);
-  };
-
-  const drawCard = () => {
-    // Simple card drawing logic - can be enhanced
-    const allAvailableCards = [
-      ...allCards.players.map(p => ({ id: p.id, type: 'player' as const, data: p })),
-      ...allCards.plays.map(p => ({ id: p.id, type: 'play' as const, data: p })),
-      ...allCards.modifiers.map(m => ({ id: m.id, type: 'modifier' as const, data: m })),
-    ];
-
-    const randomCard = allAvailableCards[Math.floor(Math.random() * allAvailableCards.length)];
-    setHand(prev => [...prev, randomCard]);
-  };
-
   const handleCardClick = (card: Card) => {
+    // Show animation feedback
+    setPlayedCardAnimation(card.data.name);
+    setTimeout(() => setPlayedCardAnimation(null), 1000);
+    
     playCard(card);
-    // Remove the card from hand after playing
-    setHand(prev => prev.filter(c => c.id !== card.id || c.type !== card.type));
+  };
+
+  const handleDrawCards = () => {
+    drawCards(3);
+  };
+
+  const handleMulligan = () => {
+    mulligan();
   };
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-gray-800">Your Hand</h2>
-        <button
-          onClick={drawCard}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-        >
-          Draw Card
-        </button>
+        <h2 className="text-xl font-bold text-gray-800">Your Hand ({hand.length}/8)</h2>
+        <div className="flex gap-2">
+          <button
+            onClick={handleDrawCards}
+            disabled={hand.length >= 8}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+          >
+            Draw 3 Cards
+          </button>
+          <button
+            onClick={handleMulligan}
+            className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors"
+          >
+            Mulligan Hand
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 relative">
         {hand.map((card, index) => (
-          <div key={`${card.id}-${index}`} className="cursor-pointer hover:scale-105 transition-transform">
+          <div 
+            key={`${card.id}-${index}`} 
+            className={`cursor-pointer transition-all duration-300 ${
+              playedCardAnimation === card.data.name 
+                ? 'animate-pulse scale-110' 
+                : 'hover:scale-105 hover:shadow-lg'
+            }`}
+          >
             <CardComponent card={card} onClick={() => handleCardClick(card)} />
           </div>
         ))}
+        
+        {/* Played Card Animation Overlay */}
+        {playedCardAnimation && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="bg-green-500 text-white px-4 py-2 rounded-lg font-bold animate-bounce">
+              Played: {playedCardAnimation}
+            </div>
+          </div>
+        )}
       </div>
 
       {hand.length === 0 && (
         <div className="text-center text-gray-500 py-8">
-          No cards in hand. Click "Draw Card" to get started!
+          No cards in hand. Click "Draw 3 Cards" to get started!
         </div>
       )}
     </div>

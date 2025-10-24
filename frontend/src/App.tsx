@@ -4,6 +4,7 @@ import GameBoard from './components/GameBoard';
 import Hand from './components/Hand';
 import Scoreboard from './components/Scoreboard';
 import CardShop from './components/CardShop';
+import DraftReward from './components/DraftReward';
 import SplashPage from './components/SplashPage';
 import DeckSelection from './components/DeckSelection';
 import { Card, GameState, AppState, DeckType } from './types/game';
@@ -16,6 +17,8 @@ function App() {
   });
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showShop, setShowShop] = useState(false);
+  const [showDraftReward, setShowDraftReward] = useState(false);
 
   const handleStartNewRun = (playerName: string) => {
     setAppState(prev => ({ ...prev, currentScreen: 'deck_selection', playerName }));
@@ -61,6 +64,29 @@ function App() {
   const handlePlayerNameChange = (name: string) => {
     setAppState(prev => ({ ...prev, playerName: name }));
   };
+
+  const handleUpdateCoachingPoints = (points: number) => {
+    if (gameState) {
+      setGameState({
+        ...gameState,
+        coaching_points: points
+      });
+    }
+  };
+
+  const handleDraftCardSelected = (card: Card) => {
+    // Card is already added to deck by the DraftReward component
+    // Just close the modal
+    setShowDraftReward(false);
+  };
+
+  // Check for game wins to show draft reward
+  useEffect(() => {
+    if (gameState && gameState.game_progress.games_won > 0) {
+      // Show draft reward after game win
+      setShowDraftReward(true);
+    }
+  }, [gameState?.game_progress.games_won]);
 
   if (isLoading) {
     return (
@@ -113,6 +139,13 @@ function App() {
               ← Main Menu
             </button>
             
+            <button
+              onClick={() => setShowShop(true)}
+              className="absolute right-4 top-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              🛒 Shop ({gameState.coaching_points} CP)
+            </button>
+            
             <h1 className="text-4xl font-bold text-white mb-2">
               Fantasy Football Roguelike
             </h1>
@@ -130,7 +163,6 @@ function App() {
             {/* Right Column - UI Elements */}
             <div className="space-y-6">
               <Scoreboard />
-              <CardShop />
             </div>
           </div>
 
@@ -138,6 +170,24 @@ function App() {
           <div className="mt-8">
             <Hand />
           </div>
+
+          {/* Shop Modal */}
+          {showShop && gameState && (
+            <CardShop
+              sessionId={gameState.session_id}
+              onClose={() => setShowShop(false)}
+              onUpdateCoachingPoints={handleUpdateCoachingPoints}
+            />
+          )}
+
+          {/* Draft Reward Modal */}
+          {showDraftReward && gameState && (
+            <DraftReward
+              sessionId={gameState.session_id}
+              onClose={() => setShowDraftReward(false)}
+              onCardSelected={handleDraftCardSelected}
+            />
+          )}
         </div>
       </div>
     </GameProvider>

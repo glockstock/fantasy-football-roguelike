@@ -102,8 +102,9 @@ const CardComponent: React.FC<CardComponentProps> = ({ card, onClick, className 
       className={`
         ${getCardTypeClass(card.type)}
         ${getRarityColor(card.data.rarity)}
-        ${onClick ? 'cursor-pointer hover:shadow-lg' : ''}
+        ${onClick ? 'cursor-pointer hover:shadow-lg hover:scale-105' : ''}
         ${className}
+        border-2 rounded-lg p-3 transition-all duration-200 shadow-md
       `}
       onClick={onClick}
     >
@@ -117,6 +118,22 @@ const CardComponent: React.FC<CardComponentProps> = ({ card, onClick, className 
       </div>
       
       {renderCardContent()}
+      
+      {/* Synergy Tags */}
+      {card.synergy_tags && card.synergy_tags.length > 0 && (
+        <div className="mt-2 pt-2 border-t border-gray-200">
+          <div className="flex flex-wrap gap-1">
+            {card.synergy_tags.map((tag, index) => (
+              <span
+                key={index}
+                className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full font-medium"
+              >
+                {tag.replace('_', ' ')}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

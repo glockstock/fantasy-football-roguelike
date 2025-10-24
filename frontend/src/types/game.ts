@@ -38,6 +38,15 @@ export interface Card {
   id: number;
   type: 'player' | 'play' | 'modifier';
   data: Player | Play | Modifier;
+  synergy_tags?: string[];
+  multiplier_effect?: number;
+  combo_trigger?: ComboCondition;
+}
+
+export interface ComboCondition {
+  type: 'position_count' | 'play_chain' | 'rarity_match';
+  condition: any;
+  bonus: number;
 }
 
 export interface GameState {
@@ -51,8 +60,16 @@ export interface GameState {
   game: number;
   drive: number;
   score: number;
-  hand?: Card[];
-  field?: Card[];
+  hand: Card[];
+  field: Card[];
+  deck_cards: Card[];
+  bench: Card[];
+  discard_pile: Card[];
+  coaching_points: number;
+  downs: number;
+  distance: number;
+  yards_to_go: number;
+  pressure_level: number;
   career_level: CareerLevel;
   career_progress: CareerProgress;
   game_progress: GameProgress;
